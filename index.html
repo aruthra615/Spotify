@@ -1,4 +1,11 @@
-<style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Spotify UI Recreation</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
   @import url('https://fonts.googleapis.com/css2?family=Circular+Std:wght@400;700&display=swap');
 </style>
 
@@ -79,9 +86,147 @@
     text-transform: uppercase;
   }
 </style>
+<body>
+  <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+  <div class="container">
+    <div class="left-bar" id="sidebar">
+      <img src="logo.svg" alt="Spotify Logo" class="logo"/>
+      <nav>
+        <a href="#" class="active"><i class="fa fa-home"></i> Home</a>
+        <a href="#"><i class="fa fa-search"></i> Search</a>
+        <a href="#"><i class="fa fa-book"></i> Your Library</a>
+      </nav>
+      <div class="playlist-section">
+        <a href="#"><i class="fa fa-plus-square"></i> Create Playlist</a>
+        <a href="#"><i class="fa fa-heart"></i> Liked Songs</a>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="top-bar">
+        <div class="nav-buttons">
+          <button><i class="fa fa-chevron-left"></i></button>
+          <button><i class="fa fa-chevron-right"></i></button>
+          <button onclick="toggleTheme()" style="margin-left: 15px;">🌓</button>
+        </div>
+        <div class="user">
+          <img src="user.jpg" alt="User" class="avatar"/>
+          <span>Aruthra</span>
+        </div>
+      </div>
+
+      <div class="greeting">
+        <h2>Good evening</h2>
+        <input type="text" placeholder="Search your music..." id="searchInput" oninput="filterCards()" style="padding: 10px; margin-bottom: 20px; width: 100%; border-radius: 5px; border: none; outline: none;">
+        <div class="tabs">
+          <button onclick="filterCategory('All')" class="active">All</button>
+          <button onclick="filterCategory('Focus')">Focus</button>
+          <button onclick="filterCategory('Chill')">Chill</button>
+        </div>
+        <div class="cards" id="dynamicCards"></div>
+      </div>
+
+      <div class="section">
+        <h3>Recently Played</h3>
+        <div class="playlist-row" id="dynamicPlaylists"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cards = [
+      { title: 'Lo-fi Beats', category: 'Chill', img: 'https://i.scdn.co/image/ab67616d0000b27387b27c1b0d0d2e29d9a73b3c', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+      { title: 'Chill Vibes', category: 'Chill', img: 'https://i.scdn.co/image/ab67616d0000b2730a2b0b9a1f564f3725b82e63', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+      { title: 'Focus Flow', category: 'Focus', img: 'https://i.scdn.co/image/ab67616d0000b27310bba9e35c1c097a4d8b12d3', audio: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' }
+    ];
+
+    const playlists = [
+      { title: 'Jazz', img: 'https://i.scdn.co/image/ab67616d0000b273e074f1dc5e92f9b18dc1c3a2' },
+      { title: 'Workout', img: 'https://i.scdn.co/image/ab67616d0000b27313c6242734b0e8f2be9269b3' },
+      { title: 'Sleep', img: 'https://i.scdn.co/image/ab67616d0000b273144c7f0a3d1ef17fd930a9b5' }
+    ];
+
+    let currentCategory = 'All';
+
+    function populateUI() {
+      const cardContainer = document.getElementById('dynamicCards');
+      const playlistContainer = document.getElementById('dynamicPlaylists');
+      cardContainer.innerHTML = '';
+      playlistContainer.innerHTML = '';
+
+      cards.forEach(({ title, img, category, audio }) => {
+        if (currentCategory === 'All' || currentCategory === category) {
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.innerHTML = `<img src="${img}" alt="${title}"><span>${title}</span><audio src="${audio}" preload="auto"></audio>`;
+          div.addEventListener('mouseenter', () => div.querySelector('audio').play());
+          div.addEventListener('mouseleave', () => { const a = div.querySelector('audio'); a.pause(); a.currentTime = 0; });
+          cardContainer.appendChild(div);
+        }
+      });
+
+      playlists.forEach(({ title, img }) => {
+        const div = document.createElement('div');
+        div.className = 'playlist-card';
+        div.innerHTML = `<img src="${img}" alt="${title}"><span>${title}</span>`;
+        playlistContainer.appendChild(div);
+      });
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+    }
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+
+    function filterCards() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('.card').forEach(card => {
+        const title = card.innerText.toLowerCase();
+        card.style.display = title.includes(query) ? 'flex' : 'none';
+      });
+    }
+
+    function filterCategory(category) {
+      currentCategory = category;
+      document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+      Array.from(document.querySelectorAll('.tabs button')).find(btn => btn.textContent === category).classList.add('active');
+      populateUI();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadTheme();
+      populateUI();
+    });
+  </script>
+</body>
 
 <script>
-  window.addEventListener('load', function() {
-    window.open('popup.html', '_blank', 'width=720,height=540');
+  window.addEventListener('DOMContentLoaded', () => {
+    const hasSeenPopup = localStorage.getItem('popupShown');
+    const popup = document.getElementById('popup');
+    if (!hasSeenPopup) {
+      setTimeout(() => {
+        popup.style.display = 'flex';
+        localStorage.setItem('popupShown', 'true');
+      }, 10000); // 10 seconds delay
+    } else {
+      popup.style.display = 'none';
+    }
   });
+
+  function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+  }
 </script>
+
